@@ -1,0 +1,33 @@
+# Narrador do jogo da tesoura (tesoura.boralula.org): grava em 20 máquinas as frases de jogo-voz/faltam.tsv e sobe os
+# mp3 direto para o bucket do jogo. Só no fork pessoal (segredo CHAVE_VOZ), nunca na org: ocuparia as 20 máquinas dela.
+name: jogo-voz
+
+on:
+  push:
+    branches: [jogo-voz]
+    paths: [jogo-voz/**, .github/workflows/jogo-voz.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gravar:
+    if: github.repository_owner != 'comite-popular-tech'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: jogo-voz
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install edge-tts==7.3.1
+      - run: sleep $(( RANDOM % 20 )) && python jogo-voz/gravar.py ${{ matrix.parte }}/20 --paralelas 12
+        env:
+          CHAVE_VOZ: ${{ secrets.CHAVE_VOZ }}
